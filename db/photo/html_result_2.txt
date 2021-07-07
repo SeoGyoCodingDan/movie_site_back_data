@@ -1,0 +1,2377 @@
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<title>KOFIC 영화관 입장권 통합전산망 :: 영화정보</title>
+<!-- 공통 js/css -->
+<!--[if IE]>
+<script src="/kobis/web/comm/commjs/html5shiv.js"></script>
+<![endif]-->
+<!-- 기본 css -->
+<link href="/kobis/web/comm/commcss/default.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/jquery-ui-1.12.1.min.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/common.css" rel="stylesheet" type="text/css"/>
+<script async="" src="https://www.google-analytics.com/analytics.js" type="text/javascript"></script><script src="https://cr.acecounter.com/Web/AceCounter_AW.js?gc=AB2A31560820885&amp;py=0&amp;gd=gtt6&amp;gp=8080&amp;up=NaPm_Ncisy&amp;rd=1625037842014"></script><script src="/kobis/web/comm/commjs/jquery-1.12.4.min.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/jquery.dotdotdot.min.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/jquery.bxslider.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/comm_script.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/jquery-ui-1.12.1.min.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/jquery.ui.datepicker-ko.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/kobis.js" type="text/javascript"></script>
+<script type="text/javascript">
+jQuery.curCSS = function(element, prop, val) {
+    return jQuery(element).css(prop, val);
+};
+</script>
+<link href="/kobis/web/comm/commcss/cont.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/kobis.css" rel="stylesheet" type="text/css"/>
+<script src="/kobis/web/comm/commjs/jcarousellite_1.0.1.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/IGuide.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/jquery.cookie.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/dialogStyle.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/layerpopup.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/innershiv.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/detailLayer.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/online/js/Chart.js" type="text/javascript"></script><style type="text/css">/* Chart.js */
+@-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style>
+<script src="/kobis/web/comm/online/js/jquery.peity.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/layerpopup.js" type="text/javascript"></script>
+<script src="/kobis/web/comm/commjs/innershiv.js" type="text/javascript"></script>
+<style type="text/css">
+.title a {
+	display: inline;
+	float: none;
+}
+</style>
+<!-- 공통 js/css -->
+<script type="text/javascript">
+	
+	var dtCd = '20218783';
+	var dtTp = 'movie';
+	
+	//페이징
+	function goPage(page) {
+		/* var pForm = document.pagingForm;
+		pForm.curPage.value = page;
+		pForm.submit(); */
+		
+		$("[name=curPage]").val(page);
+		
+		commSearchAjax();
+	}
+	// 초성 검색
+	function fn_chosung_search(chosung) {
+		var sForm = document.searchForm;
+		if (chosung) {
+			sForm.chosung.value = chosung;
+		} else {
+			sForm.chosung.value = '';
+		}
+		fn_searchList();
+	}
+	function fn_chosung(Obj) {
+		fn_chosung_search(Obj);
+	};
+	//조회 버튼 검색
+	function fn_searchList(type) {
+		var sForm = document.searchForm;
+		sForm.searchType.value = type;
+		sForm.curPage.value = "1";
+		moreCheck();
+		var n = $("[name=sNomal]").prop("checked")?"Y":"N";
+		var m = $("[name=sMulti]").prop("checked")?"Y":"N";
+		var i = $("[name=sIndie]").prop("checked")?"Y":"N";
+		$("[name=sMultiChk]").val(n+m+i);
+		if(n+m+i == "NNN"){
+			alert("영화구분은 한가지 이상 선택하셔야 조회 가능합니다.");
+			return false;
+		}
+		if (type == 'excel') {
+			if (!confirm('많은 양의 데이터를 다운로드시 시간이 오래 걸릴 수 있습니다. 엑셀로 다운받으시겠습니까?'))
+				return false;
+			//			$(sForm).submitXls();
+			var act = $(sForm).attr("action");
+			$(sForm).attr("action", "/kobis/business/mast/mvie/searchMovieListXls.do");
+			sForm.submit();
+			$(sForm).attr("action", act);
+			sForm.searchType.value = '';
+			return false;
+		}
+		
+		/* sForm.submit();
+		sForm.searchType.value = ''; */
+		
+		$("#searchForm").attr("action", "searchMovieList.do");
+		commSearchAjax();
+		
+	}
+	$(function() {
+		//엔터검색
+		if(!$("#wrap").attr("class")== false){
+			if($("#wrap").attr("class").indexOf("admin")<0){
+				$("form").find(":text:enabled:not([readonly='readonly'])").each(function(){
+					$(this).keypress(function(event){
+						if(event.which=='13'){
+							if($('#pageIndex').val() != 'undefined') {
+								$('#pageIndex').val("1");
+							}
+							fn_searchList();
+						}
+					});
+				});
+			}
+		}
+		
+		//삭제 영화 스타일 설정
+		$(".del").find("td").css({
+			"color" : "red"
+		}).find("a").css({
+			"color" : "red"
+		});
+		
+		$("#tmpDate").datepicker({
+			dateFormat: 'yy-mm-dd'
+		});
+		//초성검색 버튼 이벤트 등록
+		//상세검색 초기상태 레이어 펼치기 접기
+		//제작상태 멀티 조회
+		$("#sPrdtStatStr").click(function fn_openLayedPop(){
+			var opts = {
+	          'center' : false ,//가운데 정렬 아님
+	  		  'modal'  : true ,
+	          'searchname'  : '#sPrdtStatStr', //조회 조건, 이 컴포넌트 아래 위치
+	  		  'frmTy'  : 'codes:2202000000', //코드성 조회
+	  		  'height': '440',
+	  		  'width': '500',
+	  		  'seldata':$(this).siblings("[name='sPrdtStatCd']").map(function(){return $(this).val();}),
+	  		  'hideRep':true,
+	  		  onComplete: function(data){
+	  			$("#sPrdtStatStr").parents("div.tf_comm").find("input[name='sPrdtStatCd']").remove();
+	  			$("#sPrdtStatStr").val("");
+				  for(var i=0; i<data.length; i++){
+					  if(i!=0){
+						  $("#sPrdtStatStr").val($("#sPrdtStatStr").val()+",");
+					  }
+					  $("#sPrdtStatStr").val($("#sPrdtStatStr").val()+data[i].korNm);
+					  $("#sPrdtStatStr").parents("div.tf_comm").append("<input name='sPrdtStatCd' type='hidden' value='" + data[i].fullCd + "'/>");
+				  }
+	           }
+	      	};
+			$("#sPrdtStatStr").layerPopup(opts);
+		});
+		//영화유형 멀티 조회
+		$("#sMovTypeStr").click(function fn_openLayedPop(e){
+			var opts = {
+	          'center' : false ,//가운데 정렬 아님
+	  		  'modal'  : true ,
+	          'searchname'  : '#sMovTypeStr', //조회 조건, 이 컴포넌트 아래 위치
+	  		  'frmTy'  : 'codes:2201000000', //코드성 조회
+	  		  'height': '350',
+	  		  'width': '500',
+	  		  'seldata':$(this).siblings("[name='sMovTypeCd']").map(function(){return $(this).val();}),
+	  		  'hideRep':true,
+	  		  onComplete: function(data){
+	  			$("#sMovTypeStr").parents("div.tf_comm").find("input[name='sMovTypeCd']").remove();
+	  			$("#sMovTypeStr").val("");
+				  for(var i=0; i<data.length; i++){
+					  if(i!=0){
+						  $("#sMovTypeStr").val($("#sMovTypeStr").val()+",");
+					  }
+					  $("#sMovTypeStr").val($("#sMovTypeStr").val()+data[i].korNm);
+					  $("#sMovTypeStr").parents("div.tf_comm").append("<input name='sMovTypeCd' type='hidden' value='" + data[i].fullCd + "'/>");
+				  }
+	           }
+	      	};
+			$("#sMovTypeStr").layerPopup(opts);
+		});
+		//장르 멀티 조회
+		$("#sGenreStr").click(function fn_openLayedPop(e){
+			var selARR = new Array();
+			$(this).parents("div.tf_comm").find("[name='sGenreCd']").each(function(){
+				selARR.push( $(this).val());
+			});
+			var opts = {
+	          'center' : false ,//가운데 정렬 아님
+	  		  'modal'  : true ,
+	          'searchname'  : '#sGenreStr', //조회 조건, 이 컴포넌트 아래 위치
+	  		  'frmTy'  : 'codes:2205000000', //코드성 조회
+	  		  'height': '450',
+	  		  'width': '500',
+	  		  'seldata':$(this).siblings("[name='sGenreCd']").map(function(){return $(this).val();}),
+	  		  'hideRep':true,
+	  		  onComplete: function(data){
+	  			$("#sGenreStr").parents("div.tf_comm").find("input[name='sGenreCd']").remove();
+	  			$("#sGenreStr").val("");
+				  for(var i=0; i<data.length; i++){
+					  if(i!=0){
+						  $("#sGenreStr").val($("#sGenreStr").val()+",");
+					  }
+					  $("#sGenreStr").val($("#sGenreStr").val()+data[i].korNm);
+					  $("#sGenreStr").parents("div.tf_comm").append("<input name='sGenreCd' type='hidden' value='" + data[i].fullCd + "'/>");
+				  }
+	           }
+	      	};
+			$("#sGenreStr").layerPopup(opts);
+		});
+		//국적 멀티 조회
+		$("#sNationStr").click(function fn_openLayedPop(e){
+			var selARR = new Array();
+			$(this).parents("div.tf_comm").find("[name='sNationCd']").each(function(){
+				selARR.push( $(this).val());
+			});
+			var opts = {
+	          'center' : false ,//가운데 정렬 아님
+	  		  'modal'  : true ,
+	          'searchname'  : '#sNationStr', //조회 조건, 이 컴포넌트 아래 위치
+	  		  'frmTy'  : 'tcode:2203000000', //코드성 조회
+	  		  'height': '450',
+	  		  'width': '650',
+	  		  'seldata':selARR,
+	  		  'hideRep':true,
+	  		  onComplete: function(data){
+	  			$("#sNationStr").parents("div.tf_comm").find("input[name='sNationCd']").remove();
+	  			$("#sNationStr").val("");
+				  for(var i=0; i<data.length; i++){
+					  if(i!=0){
+						  $("#sNationStr").val($("#sNationStr").val()+",");
+					  }
+					  $("#sNationStr").val($("#sNationStr").val()+data[i].korNm);
+					  $("#sNationStr").parents("div.tf_comm").append("<input name='sNationCd' type='hidden' value='" + data[i].fullCd + "'/>");
+				  }
+	           }
+	      	};
+			$("#sNationStr").layerPopup(opts);
+		});
+		//대표국적 멀티 조회
+		$("#sRepNationStr").click(function fn_openLayedPop(e){
+			var opts = {
+	          'center' : false ,//가운데 정렬 아님
+	  		  'modal'  : true ,
+	          'searchname'  : '#sRepNationStr', //조회 조건, 이 컴포넌트 아래 위치
+	  		  'frmTy'  : 'tcode:2203000000', //코드성 조회
+	  		  'height': '450',
+	  		  'width': '650',
+	  		  'seldata':$(this).siblings("[name='sRepNationCd']").map(function(){return $(this).val();}),
+	  		  'hideRep':true,
+	  		  onComplete: function(data){
+	  			$("#sRepNationStr").parents("div.tf_comm").find("input[name='sRepNationCd']").remove();
+	  			$("#sRepNationStr").val("");
+				  for(var i=0; i<data.length; i++){
+					  if(i!=0){
+						  $("#sRepNationStr").val($("#sRepNationStr").val()+",");
+					  }
+					  $("#sRepNationStr").val($("#sRepNationStr").val()+data[i].korNm);
+					  $("#sRepNationStr").parents("div.tf_comm").append("<input name='sRepNationCd' type='hidden' value='" + data[i].fullCd + "'/>");
+				  }
+	           }
+	      	};
+			$("#sRepNationStr").layerPopup(opts);
+		});
+		// 포인트 검색 이벤트 등록
+		$("#per").click(); //초기 상테
+		$("#onoff li").find("img").each(function() { //포인트 검색 버튼에 이벤트 등록***************
+			$(this).click(function() {
+				document.searchForm.point.value = $(this).attr(
+						"id").replace('per', '');
+				fn_searchList();
+			});
+		});
+
+		// 검색엔진에서 코드값이 넘어오면 바로 팝업 띄움
+		
+		
+			$("input[type=checkbox]").prop("checked",true);
+		
+		$(".fr .list_sort li a").each(function() { //포인트 검색 버튼에 이벤트 등록
+			$(this).click(function() {
+				document.searchForm.point.value = $(this)
+						.text().replace('%', '').replace('전체',
+								'');
+				fn_searchList();
+			});
+		});
+	});
+
+	// 검색조건 초기화
+	function fn_searchReset() {
+		var $frm = $(document.searchForm);
+		$frm.find("input:visible").val("");
+		$frm.find("[name='sPrdtStatCd']").remove();
+		$frm.find("[name='sMovTypeCd']").remove();
+		$frm.find("[name='sGenreCd']").remove();
+		$frm.find("[name='sGradeCd']").remove();
+		$frm.find("[name='sShowTypeCd']").remove();
+		$frm.find("[name='sNationCd']").remove();
+		$frm.find("[name='chosung']").val("");
+		$frm.find("input[type=checkbox]").prop("checked",true);
+		$(".list_idx").children().removeClass("on");
+		$("#sPrdtYearS").next().find(".slt_coverInner").text("--전체--");
+		$("#sPrdtYearS").val("");
+		$("#sPrdtYearE").next().find(".slt_coverInner").text("--전체--");
+		$("#sPrdtYearE").val("");
+		$("#useYn").next().find(".slt_coverInner").text("--전체--");
+		$("#useYn").val("");
+
+	}
+
+	//등급검색 추가
+	function fn_searchGrade(tObj){
+		$tObj = $(tObj);
+		var opts = {
+		          'center' : false ,//가운데 정렬 아님
+		  		  'modal'  : true ,
+		          'searchname'  : $tObj, //조회 조건, 이 컴포넌트 아래 위치
+		  		  'frmTy'  : 'tcode:2300000000', //코드성 조회
+		  		  'height': '450',
+		  		  'width': '900',
+		  		  'seldata':$tObj.siblings("[name='sGradeCd']").map(function(){return $(this).val();}),
+		  		  'hideRep':true,
+		  		  onComplete: function(data){
+		  			$tObj.val("");
+					$tObj.siblings("input[name='sGradeCd']").remove();
+		  			for(var i=0; i<data.length; i++){
+						  if(i!=0){
+				  				$tObj.val($tObj.val()+",");
+						  }
+		  				$tObj.val($tObj.val()+data[i].korNm);
+				  		var	addStr = "<input type='hidden' name='sGradeCd' value='"+data[i].fullCd+"'/>";
+				  		$(addStr).insertBefore($tObj);
+		  			}
+		           }
+		      	};
+				$tObj.layerPopup(opts);
+	}
+	// 상영타입 검색추가
+	function fn_searchScrn(tObj){
+		$tObj = $(tObj);
+		var opts = {
+		          'center' : false ,//가운데 정렬 아님
+		  		  'modal'  : true ,
+		          'searchname'  : $tObj, //조회 조건, 이 컴포넌트 아래 위치
+		  		  'frmTy'  : 'tcode:5010000000', //코드성 조회
+		  		  'height': '450',
+		  		  'width': '750',
+		  		  'seldata':$tObj.siblings("[name='sShowTypeCd']").map(function(){return $(this).val();}),
+		  		  'hideRep':true,
+		  		  onComplete: function(data){
+		  			$tObj.val("");
+					$tObj.siblings("input[name='sShowTypeCd']").remove();
+		  			for(var i=0; i<data.length; i++){
+		  				if(i!=0){
+		  					$tObj.val($tObj.val()+",");
+		  				}
+		  				$tObj.val($tObj.val()+data[i].korNm);
+				  		var	addStr = "<input type='hidden' name='sShowTypeCd' value='"+data[i].fullCd+"'/>";
+				  		$(addStr).insertBefore($tObj);
+		  			}
+		           }
+		      	};
+				$tObj.layerPopup(opts);
+	}
+	function btn_more_close(type) {
+		if (type == "more") {
+			$("input[name='searchOpen']").val("Y");
+			$(".drop  *").attr("disabled",false);
+		} else if (type == "close") {
+			$("input[name='searchOpen']").val("N");
+		}
+	}
+	function fn_chkDataRange(obj, type) {
+		//날짜 형식 및 길이 유효성 체크
+		if(!gfn_IsValidateYMD($(obj).val())) return;
+		
+		//직접입력한 경우 (yyyy-mm-dd 형식으로 변경)
+		if($(obj).val().length == 8){
+			$(obj).val($(obj).val().substring(0,4) + "-" + $(obj).val().substring(4,6) + "-" + $(obj).val().substring(6,8));
+		}
+		
+		if(type == "START"){
+
+			$("#tmpDate").datepicker("setDate",$("#cal_start").datepicker("getDate"));
+			$("#tmpDate").datepicker("setDate","c+6d");
+			if($("#cal_start").datepicker("getDate") > $("#cal_end").datepicker("getDate")){
+				$("#cal_end").datepicker("setDate", $("#tmpDate").datepicker("getDate"));
+			}
+			/* else if($("#tmpDate").datepicker("getDate") < $("#cal_end").datepicker("getDate") ){
+				$("#cal_end").datepicker("setDate", $(obj).datepicker("getDate"));
+				$("#cal_end").datepicker("setDate", "c+6d");
+			} */
+		}
+		else{
+
+			$("#tmpDate").datepicker("setDate",$("#cal_end").datepicker("getDate"));
+			$("#tmpDate").datepicker("setDate","c-6d");
+			if($("#cal_start").datepicker("getDate") > $("#cal_end").datepicker("getDate")){
+				$("#cal_start").datepicker("setDate", $("#tmpDate").datepicker("getDate"));
+			}
+			/* else if($("#tmpDate").datepicker("getDate") > $("#cal_start").datepicker("getDate") ){
+				$("#cal_start").datepicker("setDate", $(obj).datepicker("getDate"));
+				$("#cal_start").datepicker("setDate", "c-6d");
+			} */
+		}	
+	}
+</script>
+</head>
+<body>
+<!-- 로딩중 -->
+<!-- 	<div id="wrap_layer" style="position: fixed">
+		<p style="position: absolute; top: 50%; left: 50%; margin-left: -270px;">
+			<img src="/kobis/web/comm/images/common/progressbar.gif" alt="현재 페이지를 로딩중입니다.">
+		</p>
+	</div> -->
+<!-- 로딩중 -->
+<div class="mvie1_1" id="wrap">
+<script type="text/javascript">
+	function mainTopMenuTopView(divName) {
+		var frm = document.getElementById(divName);
+		if(frm.style.display != "block") frm.style.display = "block";
+		else frm.style.display = "none";
+	}
+	
+	function fn_changeSearch() {
+		SetCookie("sel_s_type", $("#sel_s_type").val());
+		var pForm = document.searchMainTopMovie;
+		
+		if($("#sel_s_type").val() == "M") {
+			pForm.action="/kobis/business/mast/mvie/searchMovieList.do";
+			$("#inp_solrSearch").attr("name", "sMovName");
+		} else {
+			pForm.action="/kobis/business/comm/search/search.do";
+			$("#inp_solrSearch").attr("name", "queryString");
+		}
+	}
+	
+	function fn_mainTopMovieSearch(){
+		var pForm = document.searchMainTopMovie;
+		pForm.submit();
+	}
+	
+	$(document).ready(function() { 
+	    if(GetCookie("sel_s_type") == "T") {
+	    	$("#sel_s_type").val("T");
+	    	
+	    	var pForm = document.searchMainTopMovie;
+	    	pForm.action="/kobis/business/comm/search/search.do";
+	    	
+	    	$("#inp_solrSearch").attr("name", "queryString"); 
+	    }
+	    $("ul.list_nav > li > a").click(function(){
+	    
+	    		
+	    	if($(this).parent().find(".bg_sub ul.nav_sub > li:eq(0)  li.depth3:eq(0)").length >0){
+	    		$(this).parent().find(".bg_sub ul.nav_sub > li:eq(0)  li.depth3:eq(0) a").click();
+	    		goDirectPage($(this).parent().find(".bg_sub ul.nav_sub > li:eq(0)  li.depth3:eq(0) a").attr("href"));
+	    	}else{
+	    		$(this).parent().find(".bg_sub ul.nav_sub > li:eq(0) a").click();
+	    		goDirectPage($(this).parent().find(".bg_sub ul.nav_sub > li:eq(0) a").attr("href"));
+	    	}
+	    	
+	    	
+	    	if($(this).parent().hasClass("nav5")){
+	    		/* $(this).attr("href","/kobis/business/stat/online/onlinefindDailyBoxOfficeList.do"); */
+	    		location.href="/kobis/business/stat/online/onlineMain.do";
+	    	}
+	    });
+	}); 
+	function goDirectPage(page){
+		location.href=page;
+	}
+</script>
+<!-- 운영 적용시 if문 삭제 -->
+<div class="minwidth" id="header">
+<div class="hd_top">
+<h1><a class="block" href="/kobis/business/main/main.do"><img alt="KOBIS 영화관 입장권 통합 전산망" src="/kobis/web/comm/images/comm/logo_comm.png"/></a></h1>
+<div class="hd_sch">
+<form action="/kobis/business/mast/mvie/searchMovieList.do" id="searchMainTopMovie" method="post" name="searchMainTopMovie">
+<input autocomplete="off" name="CSRFToken" type="hidden" value="yQOz95c0g4Bx8W2XRMm0WH6iQ0W1j2B0IZ9o6Z6aZT0"/>
+<fieldset>
+<legend class="blind">검색</legend>
+<div class="hd_slt">
+<select class="slt" id="sel_s_type" onchange="fn_changeSearch();" style="position: absolute; opacity: 0; font-size: 14px;">
+<option value="M">영화정보</option>
+<option value="T">통합검색</option>
+</select><span class="slt_cover"><span class="slt_coverInner">영화정보</span></span>
+</div>
+<span class="hd_tf">
+<input autocomplete="off" class="tf" id="inp_solrSearch" name="sMovName" placeholder="검색어를 입력하세요." type="text" value=""/>
+<input autocomplete="off" name="sMovLang" type="hidden" value="ko"/>
+</span>
+<button class="btn_sch" onclick="fn_mainTopMovieSearch();return false;" type="button"><span class="ico_comm hidetxt">검색</span></button>
+</fieldset>
+</form>
+</div>
+<span style="bottom: 20px; float: right; display: block; position: relative;">
+<a href="/kobis/business/comm/bord/listMyTip.do?bizLogicType=3"><img alt="" src="/kobis/web/comm/images/main/head_ico1.png" style="margin-right: 4px;"/></a>
+<!-- <a href="/kobis/business/mast/peop/searchPeopleList.do"><img alt="" src="/kobis/web/comm/images/main/head_ico2.png"></a> -->
+</span>
+<div class="gnb_top">
+<ul class="fl">
+<li><a href="/kobis/business/comm/user/openRegiUser.do">회원가입</a></li>
+<li><a href="/kobis/business/comm/user/openLogin.do">로그인</a></li>
+</ul>
+</div>
+</div>
+<!-- 사이트 메뉴 -->
+<div class="minwidth" id="nav">
+<h2 class="blind">사이트 메뉴</h2>
+<ul class="list_nav minwidth" style="min-width: 1260px">
+<li class="depth1 nav1 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				영화정보검색
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_mvie">
+<strong class="depth2">영화</strong>
+<span class="depth3">영화정보</span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/mvie/searchMovieList.do">영화</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/mvie/searchMovieList.do">영화정보</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/mvie/findOpenScheduleList.do">개봉스케줄</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/mvie/searchPrdtList.do">한국영화 제작상황판</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/mvie/findDiverMovList.do">독립·예술영화</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/peop/searchPeopleList.do">영화인</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/comp/searchCompanyList.do">영화사</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/thea/findTheaterInfoList.do">영화상영관</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findTheaterInfoList.do">영화상영관정보</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findAreaTheaterStat.do">지역별 영화상영관현황</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findShowHistorySc.do">상영내역</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findTheaterSchedule.do">상영스케줄</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findScreenQuota.do">스크린쿼터내역</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findArtScreenStat.do">전용상영관 현황</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findArtShowHistory.do">전용상영관 상영내역</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/fest/searchUserFestInfoList.do">영화제</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/mast/mvie/searchUserMovCdList.do">코드검색 및 등록</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/mvie/searchUserMovCdList.do">영화코드</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/send/findSenderCodeList.do">전송사업자코드</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/mast/thea/findTheaterCodeList.do">영화상영관코드</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+<li class="depth1 nav2 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				박스오피스
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_boxs">
+<strong class="depth2">박스오피스</strong>
+<span class="depth3">일별</span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findDailyBoxOfficeList.do">박스오피스</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findDailyBoxOfficeList.do">일별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findWeeklyBoxOfficeList.do">주간/주말</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findMonthlyBoxOfficeList.do">월별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findYearlyBoxOfficeList.do">연도별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findFormerBoxOfficeList.do">역대</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findPeriodBoxOfficeList.do">기간별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findWeekendForeignBoxOfficeList.do">해외 박스오피스</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findWeekendForeignBoxOfficeList.do">주말</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findRealTicketList.do">예매율</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findRealTicketList.do">실시간</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findDailySeatTicketList.do">좌석점유율</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findDailySeatTicketList.do">일별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findWeeklySeatTicketList.do">주간/주말</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findPeriodSeatTicketList.do">기간별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findDailyShowTicketList.do">상영점유율</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findDailyShowTicketList.do">일별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findWeeklyShowTicketList.do">주간/주말</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findPeriodShowTicketList.do">기간별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findDailyScreenTicketList.do">스크린점유율</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findDailyScreenTicketList.do">일별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findWeeklyScreenTicketList.do">주간/주말</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findPeriodScreenTicketList.do">기간별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/unfair/findDailyShowFrequency.do">공정신호등</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/unfair/findDailyShowFrequency.do">공정신호등(상영회차별 점유상황)</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/boxs/findDailyMultichainList.do">체인영화관별 상영현황</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/boxs/findDailyMultichainList.do">멀티체인별 상영현황</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+<li class="depth1 nav3 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				테마통계
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_them">
+<strong class="depth2">총 관객수 및 매출액</strong>
+<span class="depth3">연도별</span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/them/findYearlyTotalList.do">총 관객수 및 매출액</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/them/findYearlyTotalList.do">연도별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/them/findMonthlyTotalList.do">월별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/them/findWeeklyTotalList.do">요일별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/them/findDailyTotalList.do">일별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/them/findNationalityShareList.do">국적별 점유율</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/them/findAreaShareList.do">지역별 점유율</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/them/findShowTypeShareList.do">상영타입별 점유율</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/them/findRatingShareList.do">등급별 점유율</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+<li class="depth1 nav4 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				공식통계
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_offc">
+<strong class="depth2">개봉일람</strong>
+<span class="depth3">연도별</span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/offc/searchOfficHitTotList.do?searchMode=year">개봉일람</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/offc/searchOfficHitTotList.do?searchMode=year">연도별</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/offc/searchOfficHitTotList.do?searchMode=month">월별</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/offc/findYearlyBoxOfficeList.do">연도별 박스오피스</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/offc/findFormerBoxOfficeList.do">역대 박스오피스</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+<li class="depth1 nav5 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				온라인상영관 박스오피스
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_online">
+<strong class="depth2">온라인상영관 박스오피스</strong>
+<span class="depth3">일간 이용순위</span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineDailyBoxRank.do">온라인상영관 박스오피스</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineDailyBoxRank.do">일간 이용순위</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineWeeklyBoxRank.do">주간 이용순위</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineMonthlyBoxRank.do">월간 이용순위</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineYearlyBoxRank.do">연간 이용순위</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineFormerBoxRank.do">역대 이용순위</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineMovieList.do">온라인상영작 정보</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineMovieList.do">전체작품 정보</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineNewMovieList.do">최신상영작 정보</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineCompNewMovieList.do">상영관별 최신작 정보</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineDailyStat.do">산업 통계</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineDailyStat.do">산업 일간 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineWeeklyStat.do">산업 주간 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineMonthlyStat.do">산업 월간 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineYearlyStat.do">산업 연간 통계</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineNationStat.do">테마 통계</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineNationStat.do">국적분포/점유율 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineGenreStat.do">장르분포/점유율 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineArtMovieStat.do">독립·예술영화 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineMonthlySumStat.do">월별 점유율 통계</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/stat/online/onlineSeasonSumStat.do">계절별 점유율 통계</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineCompList.do">온라인상영관</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/stat/online/onlineintro.do">온라인상영관통합전산망 소개</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+<li class="depth1 nav6 headerWidth">
+<a class="tit_nav" href="javascript:;">
+			 				고객센터
+			 			</a>
+<div class="wrap_sub">
+<div class="bg_sub">
+<div class="visu_nav visu_cs">
+<strong class="depth2">공지사항</strong>
+<span class="depth3"></span>
+</div>
+<ul class="nav_sub">
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/ntfy/findCustomerNotifyList.do">공지사항</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/comm/openKobisIntro.do">KOBIS소개</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openKobisIntro.do">KOBIS소개</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openCinemAconnect.do">영화상영관연동안내</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openMemBerJoin.do">회원가입안내</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openOffTheater.do">비상설 상영장 가입안내</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openStatute.do">영비법</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openSiteMap.do">SITE MAP</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openPrivacyAgreement.do">개인정보처리방침</a>
+</li>
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/comm/openLocation.do">오시는 길</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/bord/listMyTip.do?bizLogicType=3">정보수정요청</a>
+<ul class="ovf overdepth">
+<li class="depth3">
+<a class="block" href="/kobis/business/comm/bord/insertTip.do">정보수정요청 등록</a>
+</li>
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/user/openLogin.do">로그인</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/user/openRegiUser.do">회원가입</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/comm/comm/openFaq.do">FAQ</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+<li class="depth2">
+<a class="tit_sub" href="/kobis/business/sati/findSatiReqList.do">설문조사</a>
+<ul class="ovf overdepth">
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- container -->
+<div id="container">
+<div id="snb">
+<h2 class="blind">
+            	영화정보검색
+            </h2>
+<h3>
+            	영화정보검색
+            </h3>
+<ul class="list_snb">
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li class="on" no="101">
+<strong class="tit"><a href="/kobis/business/mast/mvie/searchMovieList.do">영화</a></strong>
+<a class="hidetxt" href="javascript:;"><span class="ico_comm">펼쳐보기</span></a>
+<ul class="list_submenu">
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li class="on" no="241">
+<a class="block" href="/kobis/business/mast/mvie/searchMovieList.do">영화정보</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="360">
+<a class="block" href="/kobis/business/mast/mvie/findOpenScheduleList.do">개봉스케줄</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="243">
+<a class="block" href="/kobis/business/mast/mvie/searchPrdtList.do">한국영화 제작상황판</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="363">
+<a class="block" href="/kobis/business/mast/mvie/findDiverMovList.do">독립·예술영화</a>
+<ul>
+</ul>
+</li>
+</ul>
+</li>
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li no="102">
+<strong class="tit"><a href="/kobis/business/mast/peop/searchPeopleList.do">영화인</a></strong>
+</li>
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li no="255">
+<strong class="tit"><a href="/kobis/business/mast/comp/searchCompanyList.do">영화사</a></strong>
+</li>
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li no="365">
+<strong class="tit"><a href="/kobis/business/mast/thea/findTheaterInfoList.do">영화상영관</a></strong>
+<a class="hidetxt" href="javascript:;"><span class="ico_comm">펼쳐보기</span></a>
+<ul class="list_submenu">
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="547">
+<a class="block" href="/kobis/business/mast/thea/findTheaterInfoList.do">영화상영관정보</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="570">
+<a class="block" href="/kobis/business/mast/thea/findAreaTheaterStat.do">지역별 영화상영관현황</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="1260">
+<a class="block" href="/kobis/business/mast/thea/findShowHistorySc.do">상영내역</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="368">
+<a class="block" href="/kobis/business/mast/thea/findTheaterSchedule.do">상영스케줄</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="370">
+<a class="block" href="/kobis/business/mast/thea/findScreenQuota.do">스크린쿼터내역</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="371">
+<a class="block" href="/kobis/business/mast/thea/findArtScreenStat.do">전용상영관 현황</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="1331">
+<a class="block" href="/kobis/business/mast/thea/findArtShowHistory.do">전용상영관 상영내역</a>
+<ul>
+</ul>
+</li>
+</ul>
+</li>
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li no="103">
+<strong class="tit"><a href="/kobis/business/mast/fest/searchUserFestInfoList.do">영화제</a></strong>
+</li>
+<!-- 메뉴 대시보드 제거 하드코딩 c:choose 삭제 -->
+<li no="170">
+<strong class="tit"><a href="/kobis/business/mast/mvie/searchUserMovCdList.do">코드검색 및 등록</a></strong>
+<a class="hidetxt" href="javascript:;"><span class="ico_comm">펼쳐보기</span></a>
+<ul class="list_submenu">
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="171">
+<a class="block" href="/kobis/business/mast/mvie/searchUserMovCdList.do">영화코드</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="373">
+<a class="block" href="/kobis/business/mast/send/findSenderCodeList.do">전송사업자코드</a>
+<ul>
+</ul>
+</li>
+<!-- 메뉴 하드코딩 c:choose 제거2 -->
+<li no="375">
+<a class="block" href="/kobis/business/mast/thea/findTheaterCodeList.do">영화상영관코드</a>
+<ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="content">
+<!-- 타이틀 & 현재 페이지 위치 -->
+<div class="hd">
+<h4 class="tit" no="241">
+<img alt="영화정보" src="/kobis/web/comm/images/mast/title_movieInfo.gif"/>
+</h4>
+<strong class="blind">영화정보</strong>
+<ul class="locate">
+<li><a href="/kobis/business/main/main.do"><span class="ico_comm">홈</span></a></li>
+<li><a href="/kobis/business/mast/mvie/searchMovieList.do">영화정보검색</a></li>
+<li><a href="/kobis/business/mast/mvie/searchMovieList.do">영화</a></li>
+<li> <strong>영화정보</strong></li>
+</ul>
+</div>
+<!-- //타이틀 & 현재 페이지 위치 -->
+<div class="box_gray">
+<p class="dot01">
+<span class="fwb">[영화정보]</span>코너는 영화정보를 식별하여 체계적으로 전국 영화상영관의 영화발권정보를 집계처리(수집)하고
+						유통될 수 있도록 <span class="fwb udline">영화정보통합관리 영화표준식별코드(FIMS코드)</span>를 생성 및 배포(부여)하고 있습니다.
+					</p>
+<p class="dot01">
+						영화정보는 홍보마케팅사, 유관기관, 영화관계사(자) 등 여러 창구를 통해 정보를 수집관리 하고 있으며,
+						<span class="udline">제공되는 정보는 데이터관리 기준에 따라 상호 차이가 있을 수 있으며, 상시적인 영화정보 등록, 수정 등을 통해 관리되고 있습니다.</span>
+</p>
+<p class="dot01">
+						영화정보 신규등록은, 위원회 대표홈페이지의 영화정보등록창구를 이용해 주시기 바랍니다.<br/>
+						(영화정보등록창구: <span class="fwb udline"><a href="http://www.kofic.or.kr/kofic/business/infm/introFims.do" style="text-decoration: underline;">http://www.kofic.or.kr/kofic/business/infm/introFims.do</a></span>)
+					</p>
+<p class="dot01">
+						 영화정보에 대한 수정이 필요하면 [영화정보 팝업창]에서 [수정요청] 버튼을 클릭하여 수정내용을
+						<span class="fwb udline"><a href="/kobis/business/comm/bord/listMyTip.do?bizLogicType=3"><strong>[정보수정요청]</strong></a></span>게시판에 등록할 수 있습니다.
+					</p>
+</div>
+<div class="f_sch">
+<div class="tar">
+<a class="btn_small" href="javascript:;" onclick="fn_searchList('excel');return false;">엑셀</a>
+</div>
+<form action="searchMovieList.do" id="searchForm" method="post" name="searchForm">
+<input autocomplete="off" name="CSRFToken" type="hidden" value="yQOz95c0g4Bx8W2XRMm0WH6iQ0W1j2B0IZ9o6Z6aZT0"/>
+<input autocomplete="off" name="curPage" type="hidden" value="1"/>
+<input autocomplete="off" name="searchType" type="hidden" value=""/>
+<input autocomplete="off" name="point" type="hidden" value=""/>
+<input autocomplete="off" name="orderBy" type="hidden" value=""/>
+<input autocomplete="off" class="hasDatepicker" id="tmpDate" type="hidden"/>
+<div class="ins">
+<div class="item">
+<strong class="dot01">영화명</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" name="sMovName" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">감독명</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" name="sDirector" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">제작연도</strong>
+<div class="period">
+<div class="slt_comm fl">
+<!-- -->
+<select class="slt" id="sPrdtYearS" name="sPrdtYearS" style="position: absolute; opacity: 0; font-size: 13px;">
+<option value="">--전체--</option><option value="1921">1921</option><option value="1922">1922</option><option value="1923">1923</option><option value="1924">1924</option><option value="1925">1925</option><option value="1926">1926</option><option value="1927">1927</option><option value="1928">1928</option><option value="1929">1929</option><option value="1930">1930</option><option value="1931">1931</option><option value="1932">1932</option><option value="1933">1933</option><option value="1934">1934</option><option value="1935">1935</option><option value="1936">1936</option><option value="1937">1937</option><option value="1938">1938</option><option value="1939">1939</option><option value="1940">1940</option><option value="1941">1941</option><option value="1942">1942</option><option value="1943">1943</option><option value="1944">1944</option><option value="1945">1945</option><option value="1946">1946</option><option value="1947">1947</option><option value="1948">1948</option><option value="1949">1949</option><option value="1950">1950</option><option value="1951">1951</option><option value="1952">1952</option><option value="1953">1953</option><option value="1954">1954</option><option value="1955">1955</option><option value="1956">1956</option><option value="1957">1957</option><option value="1958">1958</option><option value="1959">1959</option><option value="1960">1960</option><option value="1961">1961</option><option value="1962">1962</option><option value="1963">1963</option><option value="1964">1964</option><option value="1965">1965</option><option value="1966">1966</option><option value="1967">1967</option><option value="1968">1968</option><option value="1969">1969</option><option value="1970">1970</option><option value="1971">1971</option><option value="1972">1972</option><option value="1973">1973</option><option value="1974">1974</option><option value="1975">1975</option><option value="1976">1976</option><option value="1977">1977</option><option value="1978">1978</option><option value="1979">1979</option><option value="1980">1980</option><option value="1981">1981</option><option value="1982">1982</option><option value="1983">1983</option><option value="1984">1984</option><option value="1985">1985</option><option value="1986">1986</option><option value="1987">1987</option><option value="1988">1988</option><option value="1989">1989</option><option value="1990">1990</option><option value="1991">1991</option><option value="1992">1992</option><option value="1993">1993</option><option value="1994">1994</option><option value="1995">1995</option><option value="1996">1996</option><option value="1997">1997</option><option value="1998">1998</option><option value="1999">1999</option><option value="2000">2000</option><option value="2001">2001</option><option value="2002">2002</option><option value="2003">2003</option><option value="2004">2004</option><option value="2005">2005</option><option value="2006">2006</option><option value="2007">2007</option><option value="2008">2008</option><option value="2009">2009</option><option value="2010">2010</option><option value="2011">2011</option><option value="2012">2012</option><option value="2013">2013</option><option value="2014">2014</option><option value="2015">2015</option><option value="2016">2016</option><option value="2017">2017</option><option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option><option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option><option value="2033">2033</option><option value="2034">2034</option><option value="2035">2035</option><option value="2036">2036</option><option value="2037">2037</option><option value="2038">2038</option><option value="2039">2039</option><option value="2040">2040</option><option value="2041">2041</option><option value="2042">2042</option><option value="2043">2043</option><option value="2044">2044</option><option value="2045">2045</option><option value="2046">2046</option><option value="2047">2047</option><option value="2048">2048</option><option value="2049">2049</option><option value="2050">2050</option><option value="2051">2051</option><option value="2052">2052</option><option value="2053">2053</option><option value="2054">2054</option><option value="2055">2055</option><option value="2056">2056</option><option value="2057">2057</option><option value="2058">2058</option><option value="2059">2059</option><option value="2060">2060</option><option value="2061">2061</option><option value="2062">2062</option><option value="2063">2063</option><option value="2064">2064</option><option value="2065">2065</option><option value="2066">2066</option><option value="2067">2067</option><option value="2068">2068</option><option value="2069">2069</option><option value="2070">2070</option><option value="2071">2071</option><option value="2072">2072</option><option value="2073">2073</option><option value="2074">2074</option><option value="2075">2075</option><option value="2076">2076</option><option value="2077">2077</option><option value="2078">2078</option><option value="2079">2079</option><option value="2080">2080</option><option value="2081">2081</option><option value="2082">2082</option><option value="2083">2083</option><option value="2084">2084</option><option value="2085">2085</option><option value="2086">2086</option><option value="2087">2087</option><option value="2088">2088</option><option value="2089">2089</option><option value="2090">2090</option><option value="2091">2091</option><option value="2092">2092</option><option value="2093">2093</option><option value="2094">2094</option><option value="2095">2095</option><option value="2096">2096</option><option value="2097">2097</option><option value="2098">2098</option><option value="2099">2099</option><option value="2100">2100</option><option value="2101">2101</option><option value="2102">2102</option><option value="2103">2103</option><option value="2104">2104</option><option value="2105">2105</option><option value="2106">2106</option><option value="2107">2107</option><option value="2108">2108</option><option value="2109">2109</option><option value="2110">2110</option><option value="2111">2111</option><option value="2112">2112</option><option value="2113">2113</option><option value="2114">2114</option><option value="2115">2115</option><option value="2116">2116</option><option value="2117">2117</option><option value="2118">2118</option><option value="2119">2119</option><option value="2120">2120</option><option value="2121">2121</option></select><span class="slt_cover"><span class="slt_coverInner">--전체--</span></span>
+</div>
+									~
+									<div class="slt_comm fr">
+<select class="slt" id="sPrdtYearE" name="sPrdtYearE" style="position: absolute; opacity: 0; font-size: 13px;">
+<!-- -->
+<option value="">--전체--</option><option value="1921">1921</option><option value="1922">1922</option><option value="1923">1923</option><option value="1924">1924</option><option value="1925">1925</option><option value="1926">1926</option><option value="1927">1927</option><option value="1928">1928</option><option value="1929">1929</option><option value="1930">1930</option><option value="1931">1931</option><option value="1932">1932</option><option value="1933">1933</option><option value="1934">1934</option><option value="1935">1935</option><option value="1936">1936</option><option value="1937">1937</option><option value="1938">1938</option><option value="1939">1939</option><option value="1940">1940</option><option value="1941">1941</option><option value="1942">1942</option><option value="1943">1943</option><option value="1944">1944</option><option value="1945">1945</option><option value="1946">1946</option><option value="1947">1947</option><option value="1948">1948</option><option value="1949">1949</option><option value="1950">1950</option><option value="1951">1951</option><option value="1952">1952</option><option value="1953">1953</option><option value="1954">1954</option><option value="1955">1955</option><option value="1956">1956</option><option value="1957">1957</option><option value="1958">1958</option><option value="1959">1959</option><option value="1960">1960</option><option value="1961">1961</option><option value="1962">1962</option><option value="1963">1963</option><option value="1964">1964</option><option value="1965">1965</option><option value="1966">1966</option><option value="1967">1967</option><option value="1968">1968</option><option value="1969">1969</option><option value="1970">1970</option><option value="1971">1971</option><option value="1972">1972</option><option value="1973">1973</option><option value="1974">1974</option><option value="1975">1975</option><option value="1976">1976</option><option value="1977">1977</option><option value="1978">1978</option><option value="1979">1979</option><option value="1980">1980</option><option value="1981">1981</option><option value="1982">1982</option><option value="1983">1983</option><option value="1984">1984</option><option value="1985">1985</option><option value="1986">1986</option><option value="1987">1987</option><option value="1988">1988</option><option value="1989">1989</option><option value="1990">1990</option><option value="1991">1991</option><option value="1992">1992</option><option value="1993">1993</option><option value="1994">1994</option><option value="1995">1995</option><option value="1996">1996</option><option value="1997">1997</option><option value="1998">1998</option><option value="1999">1999</option><option value="2000">2000</option><option value="2001">2001</option><option value="2002">2002</option><option value="2003">2003</option><option value="2004">2004</option><option value="2005">2005</option><option value="2006">2006</option><option value="2007">2007</option><option value="2008">2008</option><option value="2009">2009</option><option value="2010">2010</option><option value="2011">2011</option><option value="2012">2012</option><option value="2013">2013</option><option value="2014">2014</option><option value="2015">2015</option><option value="2016">2016</option><option value="2017">2017</option><option value="2018">2018</option><option value="2019">2019</option><option value="2020">2020</option><option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option><option value="2033">2033</option><option value="2034">2034</option><option value="2035">2035</option><option value="2036">2036</option><option value="2037">2037</option><option value="2038">2038</option><option value="2039">2039</option><option value="2040">2040</option><option value="2041">2041</option><option value="2042">2042</option><option value="2043">2043</option><option value="2044">2044</option><option value="2045">2045</option><option value="2046">2046</option><option value="2047">2047</option><option value="2048">2048</option><option value="2049">2049</option><option value="2050">2050</option><option value="2051">2051</option><option value="2052">2052</option><option value="2053">2053</option><option value="2054">2054</option><option value="2055">2055</option><option value="2056">2056</option><option value="2057">2057</option><option value="2058">2058</option><option value="2059">2059</option><option value="2060">2060</option><option value="2061">2061</option><option value="2062">2062</option><option value="2063">2063</option><option value="2064">2064</option><option value="2065">2065</option><option value="2066">2066</option><option value="2067">2067</option><option value="2068">2068</option><option value="2069">2069</option><option value="2070">2070</option><option value="2071">2071</option><option value="2072">2072</option><option value="2073">2073</option><option value="2074">2074</option><option value="2075">2075</option><option value="2076">2076</option><option value="2077">2077</option><option value="2078">2078</option><option value="2079">2079</option><option value="2080">2080</option><option value="2081">2081</option><option value="2082">2082</option><option value="2083">2083</option><option value="2084">2084</option><option value="2085">2085</option><option value="2086">2086</option><option value="2087">2087</option><option value="2088">2088</option><option value="2089">2089</option><option value="2090">2090</option><option value="2091">2091</option><option value="2092">2092</option><option value="2093">2093</option><option value="2094">2094</option><option value="2095">2095</option><option value="2096">2096</option><option value="2097">2097</option><option value="2098">2098</option><option value="2099">2099</option><option value="2100">2100</option><option value="2101">2101</option><option value="2102">2102</option><option value="2103">2103</option><option value="2104">2104</option><option value="2105">2105</option><option value="2106">2106</option><option value="2107">2107</option><option value="2108">2108</option><option value="2109">2109</option><option value="2110">2110</option><option value="2111">2111</option><option value="2112">2112</option><option value="2113">2113</option><option value="2114">2114</option><option value="2115">2115</option><option value="2116">2116</option><option value="2117">2117</option><option value="2118">2118</option><option value="2119">2119</option><option value="2120">2120</option><option value="2121">2121</option></select><span class="slt_cover"><span class="slt_coverInner">--전체--</span></span>
+</div>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">개봉일자</strong>
+<div class="period">
+<div class="fl">
+<label class="btn_cal" for="cal_start"><span class="ico_comm">달력</span></label>
+<div class="tf_comm">
+<input autocomplete="off" class="tf tf_cal hasDatepicker" id="cal_start" name="sOpenYearS" onchange="fn_chkDataRange(this,'START')" type="text" value=""/>
+</div>
+</div>
+									~
+									<div class="fr">
+<label class="btn_cal" for="cal_end"><span class="ico_comm">달력</span></label>
+<div class="tf_comm">
+<input autocomplete="off" class="tf tf_cal hasDatepicker" id="cal_end" name="sOpenYearE" onchange="fn_chkDataRange(this,'END')" type="text" value=""/>
+</div>
+</div>
+</div>
+</div>
+<div class="wrap_btn">
+<button class="btn_blue" onclick="fn_searchList();" type="button">조회</button>
+<button class="btn_gray" onclick="fn_searchReset();" type="button">초기화</button>
+</div>
+</div>
+<div class="drop">
+<div class="item">
+<strong class="dot01">제작상태</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sPrdtStatStr" name="sPrdtStatStr" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">유형</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sMovTypeStr" name="sMovTypeStr" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">장르별</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sGenreStr" name="sGenreStr" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">국적별</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sNationStr" name="sNationStr" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">등급별</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sGradeStr" name="sGradeStr" onclick="fn_searchGrade(this);" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">대표국적별</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sRepNationStr" name="sRepNationStr" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">상영타입별</strong>
+<div class="tf_comm">
+<input autocomplete="off" class="tf" id="sShowTypeStr" name="sShowTypeStr" onclick="fn_searchScrn(this);" type="text" value=""/>
+</div>
+</div>
+<div class="item">
+<strong class="dot01">영화구분</strong>
+<div style="line-height: 27px;margin-right: 0px;float: left;">
+<input autocomplete="off" name="sMultiChk" type="hidden"/>
+<input autocomplete="off" class="chk_comm" id="sNomal" name="sNomal" title="선택" type="checkbox" value="Y"/><label for="sNomal">일반영화   </label>
+<input autocomplete="off" class="chk_comm" id="sMulti" name="sMulti" title="선택" type="checkbox" value="Y"/><label for="sMulti">예술영화   </label>
+<input autocomplete="off" class="chk_comm" id="sIndie" name="sIndie" title="선택" type="checkbox" value="Y"/><label for="sIndie">독립영화</label>
+</div>
+</div>
+<div class="item" style="display:none;">
+<strong class="dot01">사용여부</strong>
+<div class="slt_comm">
+<select class="slt" id="useYn" name="useYn" style="position: absolute; opacity: 0; font-size: 13px;">
+<option value="A">--전체--</option>
+<option selected="selected" value="Y">정상</option>
+<option value="N">삭제</option>
+<option value="P">삭제대상</option>
+</select><span class="slt_cover"><span class="slt_coverInner">정상</span></span>
+</div>
+</div>
+<div class="item item_idx">
+<strong class="dot01">영화명 인덱싱</strong>
+<ul class="list_idx">
+<li><a href="javascript:fn_chosung_search('ㄱ');">ㄱ</a></li>
+<li><a href="javascript:fn_chosung_search('ㄴ');">ㄴ</a></li>
+<li><a href="javascript:fn_chosung_search('ㄷ');">ㄷ</a></li>
+<li><a href="javascript:fn_chosung_search('ㄹ');">ㄹ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅁ');">ㅁ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅂ');">ㅂ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅅ');">ㅅ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅇ');">ㅇ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅈ');">ㅈ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅊ');">ㅊ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅋ');">ㅋ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅌ');">ㅌ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅍ');">ㅍ</a></li>
+<li><a href="javascript:fn_chosung_search('ㅎ');">ㅎ</a></li>
+</ul>
+<ul class="list_idx">
+<li><a href="javascript:fn_chosung_search('A');">A</a></li>
+<li><a href="javascript:fn_chosung_search('B');">B</a></li>
+<li><a href="javascript:fn_chosung_search('C');">C</a></li>
+<li><a href="javascript:fn_chosung_search('D');">D</a></li>
+<li><a href="javascript:fn_chosung_search('E');">E</a></li>
+<li><a href="javascript:fn_chosung_search('F');">F</a></li>
+<li><a href="javascript:fn_chosung_search('G');">G</a></li>
+<li><a href="javascript:fn_chosung_search('H');">H</a></li>
+<li><a href="javascript:fn_chosung_search('I');">I</a></li>
+<li><a href="javascript:fn_chosung_search('J');">J</a></li>
+<li><a href="javascript:fn_chosung_search('K');">K</a></li>
+<li><a href="javascript:fn_chosung_search('L');">L</a></li>
+<li><a href="javascript:fn_chosung_search('M');">M</a></li>
+<li><a href="javascript:fn_chosung_search('N');">N</a></li>
+<li><a href="javascript:fn_chosung_search('O');">O</a></li>
+<li><a href="javascript:fn_chosung_search('P');">P</a></li>
+<li><a href="javascript:fn_chosung_search('Q');">Q</a></li>
+<li><a href="javascript:fn_chosung_search('R');">R</a></li>
+<li><a href="javascript:fn_chosung_search('S');">S</a></li>
+<li><a href="javascript:fn_chosung_search('T');">T</a></li>
+<li><a href="javascript:fn_chosung_search('U');">U</a></li>
+<li><a href="javascript:fn_chosung_search('V');">V</a></li>
+<li><a href="javascript:fn_chosung_search('W');">W</a></li>
+<li><a href="javascript:fn_chosung_search('X');">X</a></li>
+<li><a href="javascript:fn_chosung_search('Y');">Y</a></li>
+<li><a href="javascript:fn_chosung_search('Z');">Z</a></li>
+<input autocomplete="off" name="chosung" type="hidden" value=""/>
+<input autocomplete="off" name="searchOpen" type="hidden" value=""/>
+</ul>
+</div>
+</div>
+</form>
+<div class="more">
+<a class="btn_more" href="javascript:;" onclick="btn_more_close('more');">더보기<span class="ico_comm"></span></a>
+<a class="btn_close" href="javascript:;" onclick="btn_more_close('close');">닫기</a>
+</div>
+</div>
+<div class="rst_sch">
+<div class="hd_rst">
+<span class="total">총 <em class="fwb">82,649</em>건
+							</span>
+<div class="fr">
+<div class="slt_comm">
+<select class="slt" id="sOrderBy" name="sOrderBy" style="position: absolute; opacity: 0; font-size: 13px;" title="검색 정렬 옵션">
+<option value="1">최신업데이트순</option>
+<option value="2">제작연도순</option>
+<option value="3">영화명순(ㄱ~Z)</option>
+<option value="4">개봉일순</option>
+</select><span class="slt_cover"><span class="slt_coverInner">최신업데이트순</span></span>
+</div>
+</div>
+</div>
+<table class="tbl_comm">
+<caption class="blind">검색 결과</caption>
+<colgroup>
+<col width="15%"/>
+<col width="15%"/>
+<col width="10%"/>
+<col width="6%"/>
+<col width="6%"/>
+<col width="6%"/>
+<col width="6%"/>
+<col width="6%"/>
+<col width="15%"/>
+<col width="15%"/>
+</colgroup>
+<thead>
+<tr>
+<th scope="col">영화명</th>
+<th scope="col">영화명(영문)</th>
+<th scope="col">영화코드</th>
+<th scope="col">제작연도</th>
+<th scope="col">제작국가</th>
+<th scope="col">유형</th>
+<th scope="col">장르</th>
+<th scope="col">제작상태</th>
+<th scope="col">감독</th>
+<th scope="col">제작사</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218840');return false;" title="건담 G의 레콘기스타 1: 가라! 코어 파이터">건담 G의 레콘기스타 1: 가라! 코어 파이터</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218840');return false;" title="Reconguista in G the Movie I Go! Core Fighter">Reconguista in G the Movie I Go! Core Fighter</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218840
+										</span>
+</td>
+<td>
+<span class="ellip" title="2019">2019</span>
+</td>
+<td>
+<span class="ellip" title="일본"> 
+											일본
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="애니메이션,SF,액션">애니메이션(2)</span></td>
+<td><span class="ellip" title="기타">기타</span></td>
+<td class="tal">
+<span class="ellip" title="토미노 요시유키">
+<a href="#none" onclick="mstView('people','10080674');return false;">토미노 요시유키</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr class="even">
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218462');return false;" title="더 나이트">더 나이트</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218462');return false;" title="The Night">The Night</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218462
+										</span>
+</td>
+<td>
+<span class="ellip" title="2020">2020</span>
+</td>
+<td>
+<span class="ellip" title="기타"> 
+											기타
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="공포(호러),미스터리,스릴러">공포(호러)(2)</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('people','');return false;"></a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218839');return false;" title="처제길들이기 오리진 무삭제">처제길들이기 오리진 무삭제</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218839');return false;" title=""></a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218839
+										</span>
+</td>
+<td>
+<span class="ellip" title="2021">2021</span>
+</td>
+<td>
+<span class="ellip" title="한국"> 
+											한국
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="성인물(에로),멜로/로맨스">성인물(에로)(1)</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="패콘">
+<a href="#none" onclick="mstView('people','20366848');return false;">패콘</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="주식회사 패콘">
+<a href="#none" onclick="mstView('company','20206041');return false;">
+													주식회사 패콘
+												</a>
+</span>
+</td>
+</tr>
+<tr class="even">
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218838');return false;" title="처제길들이기 오리진">처제길들이기 오리진</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218838');return false;" title=""></a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218838
+										</span>
+</td>
+<td>
+<span class="ellip" title="2021">2021</span>
+</td>
+<td>
+<span class="ellip" title="한국"> 
+											한국
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="성인물(에로),멜로/로맨스">성인물(에로)(1)</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="패콘">
+<a href="#none" onclick="mstView('people','20366848');return false;">패콘</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="주식회사 패콘">
+<a href="#none" onclick="mstView('company','20206041');return false;">
+													주식회사 패콘
+												</a>
+</span>
+</td>
+</tr>
+<tr>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218783');return false;" title="다크 스펠">다크 스펠</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218783');return false;" title="Dark Spell">Dark Spell</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218783
+										</span>
+</td>
+<td>
+<span class="ellip" title="2021">2021</span>
+</td>
+<td>
+<span class="ellip" title="러시아"> 
+											러시아
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="멜로/로맨스,공포(호러)">멜로/로맨스(1)</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="스브야토슬라브 포드가에브스키">
+<a href="#none" onclick="mstView('people','10059096');return false;">스브야토슬라브 포드가에브스키</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr class="even">
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218481');return false;" title="예스, 노 또는 반반">예스, 노 또는 반반</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218481');return false;" title="Yes, No, or Maybe Half?">Yes, No, or Maybe Half?</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218481
+										</span>
+</td>
+<td>
+<span class="ellip" title="2020">2020</span>
+</td>
+<td>
+<span class="ellip" title="일본"> 
+											일본
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="애니메이션">애니메이션</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="타카타 마사히로">
+<a href="#none" onclick="mstView('people','10079362');return false;">타카타 마사히로</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218689');return false;" title="스마트폰을 떨어뜨렸을 뿐인데">스마트폰을 떨어뜨렸을 뿐인데</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218689');return false;" title="Stolen Identity">Stolen Identity</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218689
+										</span>
+</td>
+<td>
+<span class="ellip" title="2021">2021</span>
+</td>
+<td>
+<span class="ellip" title="한국"> 
+											한국
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="스릴러">스릴러</span></td>
+<td><span class="ellip" title="후반작업">후반작업</span></td>
+<td class="tal">
+<span class="ellip" title="김태준">
+<a href="#none" onclick="mstView('people','20181590');return false;">김태준</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr class="even">
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20216801');return false;" title="극장판 포켓몬스터: 정글의 아이, 코코">극장판 포켓몬스터: 정글의 아이, 코코</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20216801');return false;" title="Pokemon the Movie: Secrets of the Jungle">Pokemon the Movie: Secrets of the Jungle</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20216801
+										</span>
+</td>
+<td>
+<span class="ellip" title="2020">2020</span>
+</td>
+<td>
+<span class="ellip" title="일본"> 
+											일본
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="애니메이션">애니메이션</span></td>
+<td><span class="ellip" title="개봉예정">개봉예정</span></td>
+<td class="tal">
+<span class="ellip" title="야지마 테츠오">
+<a href="#none" onclick="mstView('people','10050389');return false;">야지마 테츠오</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218006');return false;" title="체르노빌 1986">체르노빌 1986</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20218006');return false;" title="Chernobyl: Abyss">Chernobyl: Abyss</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20218006
+										</span>
+</td>
+<td>
+<span class="ellip" title="2021">2021</span>
+</td>
+<td>
+<span class="ellip" title="러시아"> 
+											러시아
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="액션,스릴러">액션(1)</span></td>
+<td><span class="ellip" title="개봉">개봉</span></td>
+<td class="tal">
+<span class="ellip" title="다닐라 코즈로브스키">
+<a href="#none" onclick="mstView('people','20188377');return false;">다닐라 코즈로브스키</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="">
+<a href="#none" onclick="mstView('company','');return false;">
+</a>
+</span>
+</td>
+</tr>
+<tr class="even">
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20201464');return false;" title="빛나는 순간">빛나는 순간</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" style="max-width: 90%">
+<a href="#none" onclick="mstView('movie','20201464');return false;" title="Everglow">Everglow</a>
+</span>
+</td>
+<td class="tac">
+<span>  
+											20201464
+										</span>
+</td>
+<td>
+<span class="ellip" title="2020">2020</span>
+</td>
+<td>
+<span class="ellip" title="한국"> 
+											한국
+										</span>
+</td>
+<td><span class="ellip" title="장편">장편</span></td>
+<td><span class="ellip" title="드라마">드라마</span></td>
+<td><span class="ellip" title="개봉">개봉</span></td>
+<td class="tal">
+<span class="ellip" title="소준문">
+<a href="#none" onclick="mstView('people','20123348');return false;">소준문</a>
+</span>
+</td>
+<td class="tal">
+<span class="ellip" title="(주)명필름,웬에버스튜디오,명필름랩">
+<a href="#none" onclick="mstView('company','20100545');return false;">
+													(주)명필름
+												</a>
+												,
+												<a href="#none" onclick="mstView('company','20205661');return false;">
+													웬에버스튜디오
+												</a>
+												,
+												<a href="#none" onclick="mstView('company','20168488');return false;">
+													명필름랩
+												</a>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="hd_rst">
+<div class="fRight marginT7">
+<a class="btn_small" href="javascript:;" onclick="fn_searchList('excel');return false;">엑셀</a>
+</div>
+</div>
+<form action="searchMovieList.do" id="pagingForm" method="post" name="pagingForm">
+<input autocomplete="off" name="CSRFToken" type="hidden" value="yQOz95c0g4Bx8W2XRMm0WH6iQ0W1j2B0IZ9o6Z6aZT0"/>
+<input autocomplete="off" name="curPage" type="hidden" value="1"/>
+<input autocomplete="off" name="searchType" type="hidden" value=""/>
+<input autocomplete="off" name="useYn" type="hidden" value="Y"/>
+<input autocomplete="off" name="sMovLang" type="hidden" value=""/>
+<input autocomplete="off" name="sMovName" type="hidden" value=""/>
+<input autocomplete="off" name="sDirector" type="hidden" value=""/>
+<input autocomplete="off" name="sPrdtYearS" type="hidden" value=""/>
+<input autocomplete="off" name="sPrdtYearE" type="hidden" value=""/>
+<input autocomplete="off" name="sOpenYearS" type="hidden" value=""/>
+<input autocomplete="off" name="sOpenYearE" type="hidden" value=""/>
+<input autocomplete="off" name="chosung" type="hidden" value=""/>
+<input autocomplete="off" name="point" type="hidden" value=""/>
+<input autocomplete="off" name="orderBy" type="hidden" value=""/>
+<input autocomplete="off" name="sPrdtStatStr" type="hidden" value=""/>
+<input autocomplete="off" name="sMovTypeStr" type="hidden" value=""/>
+<input autocomplete="off" name="sGenreStr" type="hidden" value=""/>
+<input autocomplete="off" name="sGradeStr" type="hidden" value=""/>
+<input autocomplete="off" name="sNationStr" type="hidden" value=""/>
+<input autocomplete="off" name="sRepNationStr" type="hidden" value=""/>
+<input autocomplete="off" name="sShowTypeStr" type="hidden" value=""/>
+<input autocomplete="off" name="searchOpen" type="hidden" value=""/>
+<div class="paging">
+<ul class="list_page">
+<li>
+<a class="on" href="#none" onclick="goPage('1')">
+										1</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('2')">
+										2</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('3')">
+										3</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('4')">
+										4</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('5')">
+										5</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('6')">
+										6</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('7')">
+										7</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('8')">
+										8</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('9')">
+										9</a>
+</li>
+<li>
+<a href="#none" onclick="goPage('10')">
+										10</a>
+</li>
+</ul>
+<a class="btn next" href="javascript:;" onclick="goPage('11');return false;"><span class="ico_comm">다음</span></a>
+<a class="btn last" href="javascript:;" onclick="goPage('8265');return false;"><span class="ico_comm">마지막</span></a>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- // container -->
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="/kobis/web/comm/commjs/gtag.js?id=UA-127072686-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-127072686-1');
+</script>
+<!-- AceCounter Log Gathering Script V.8.0.AMZ2019080601 -->
+<script language="javascript">
+	var _AceGID=(function(){var Inf=['gtt6.acecounter.com','8080','AB2A31560820885','AW','0','NaPm,Ncisy','ALL','0']; var _CI=(!_AceGID)?[]:_AceGID.val;var _N=0;var _T=new Image(0,0);if(_CI.join('.').indexOf(Inf[3])<0){ _T.src ="https://"+ Inf[0] +'/?cookie'; _CI.push(Inf);  _N=_CI.length; } return {o: _N,val:_CI}; })();
+	var _AceCounter=(function(){var G=_AceGID;var _sc=document.createElement('script');var _sm=document.getElementsByTagName('script')[0];if(G.o!=0){var _A=G.val[G.o-1];var _G=(_A[0]).substr(0,_A[0].indexOf('.'));var _C=(_A[7]!='0')?(_A[2]):_A[3];var _U=(_A[5]).replace(/\,/g,'_');_sc.src='https:'+'//cr.acecounter.com/Web/AceCounter_'+_C+'.js?gc='+_A[2]+'&py='+_A[4]+'&gd='+_G+'&gp='+_A[1]+'&up='+_U+'&rd='+(new Date().getTime());_sm.parentNode.insertBefore(_sc,_sm);return _sc.src;}})();
+</script>
+<noscript><img alt="" border="0" height="0" src="//gtt6.acecounter.com:8080/?uid=AB2A31560820885&amp;je=n&amp;" width="0"/></noscript>
+<!-- AceCounter Log Gathering Script End -->
+<script language="javascript">
+function familySite(){
+   if (document.getElementById("familySite").value == "a2") {
+	   window.open ("http://www.kofic.or.kr");
+   } else if (document.getElementById("familySite").value == "a3") {
+	   window.open ("http://www.kobis.or.kr/kobisopenapi/homepg/main/main.do");
+   }
+}
+</script>
+<!-- AceCounter Log Gathering Script End -->
+<div id="footer">
+<div class="cont">
+<div class="foot_link">
+<ul class="fl">
+<li><a href="/kobis/business/comm/comm/openKobisIntro.do">KOBIS 소개</a></li>
+<li><a href="/kobis/business/comm/comm/openCinemAconnect.do">영화상영관 연동안내</a></li>
+<li><a href="/kobis/business/comm/comm/openPrivacyAgreement.do">개인정보처리방침</a></li>
+<li><a href="/kobis/business/comm/ntfy/findCustomerNotifyList.do">고객센터</a></li>
+<li><a href="/kobis/business/comm/bord/listMyTip.do?bizLogicType=3">정보수정요청</a></li>
+<li><a href="/kobis/business/comm/comm/openSiteMap.do">사이트맵</a></li>
+</ul>
+<div class="sites">
+<select class="slt" id="familySite" name="familySite" onchange="familySite();" style="position: absolute; opacity: 0; font-size: 14px;">
+<option value="a1">Family Site</option>
+<option value="a2">KOFIC</option>
+<option value="a3">OpenAPI</option>
+</select><span class="slt_cover"><span class="slt_coverInner">Family Site</span></span>
+</div>
+</div>
+<div class="foot_info">
+<strong class="fl"><a class="block" href="#none"><img alt="KOFIC 영화진흥위원회 - Korean Film Council" src="/kobis/web/comm/images/comm/footer_logo.png"/></a></strong>
+<div class="ovf">
+<span style="margin-right: 17px;">(48058) 부산광역시 해운대구 수영강변대로 130(우동)</span>
+<span style="margin-right: 17px;">고객센터: 02-6261-6573</span>
+<span style="margin-right: 17px;">이용시간: 09:00 ~ 18:00(평일)</span>
+<span style="margin-right: 17px;">E-mail: kobis@kofic.or.kr</span>
+<p>COPYRIGHT(C) KOREAN FILM COUNCIL ALL RIGHTS RESERVED.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript">
+	var clickCnt = 0;
+		$(document).ready(
+				function(e) {
+					$('.more').on('click', function() {
+						$(this).toggleClass('open')
+						$('.drop').toggle();
+					});
+					makeYearOption(); //제작년도 옵션 추가
+					
+
+					$("#sPrdtYearS").change(
+							function(e) {
+								$("#sPrdtYearS").next().find(".slt_coverInner").text($(this).val());
+								if ($("#sPrdtYearE").val() != null&&$("#sPrdtYearE").val() != "" && $("#sPrdtYearS").val() > $("#sPrdtYearE").val()) {
+									$("#sPrdtYearS").val($("#sPrdtYearE").val());
+									$("#sPrdtYearS").next().find(".slt_coverInner").text($("#sPrdtYearE").val());
+								}
+							});
+
+					$("#sPrdtYearE").change(
+							function(e) {
+								$("#sPrdtYearE").next().find(".slt_coverInner").text($(this).val());
+								if ($("#sPrdtYearS").val() != null	&& $("#sPrdtYearS").val() > $("#sPrdtYearE").val()) {
+									$("#sPrdtYearS").val($("#sPrdtYearE").val());
+									$("#sPrdtYearS").next().find(".slt_coverInner").text($("#sPrdtYearS").val());
+									$("#sPrdtYearE").next().find(".slt_coverInner").text($("#sPrdtYearE").val());
+								}
+							});
+					
+					
+					
+
+					$("#sOrderBy").change(function(e) {
+
+						$("input[name='orderBy']").val($(this).val());
+						fn_searchList();
+					});
+
+					
+
+				});
+
+		function makeYearOption() {
+			var cYear = new Date().getFullYear();
+			var sYear = cYear - 100;
+			var eYear = cYear + 100;
+			var addHtml = "";
+			addHtml += "<option value=''>--전체--</option>";
+			for (var i = sYear; i <= eYear; i++) {
+				addHtml += "<option value="+i+">" + i + "</option>"
+			}
+			$("#sPrdtYearS").append(addHtml);
+			$("#sPrdtYearE").append(addHtml);
+			$("#sPrdtYearS").val("");
+			$("#sPrdtYearE").val("");
+			if ('' > 1) {
+				$("#sPrdtYearS").val('');
+				$("#sPrdtYearS").next().find(".slt_coverInner").text(
+						'');
+			}
+			if ('' > 1) {
+				$("#sPrdtYearE").val('');
+				$("#sPrdtYearE").next().find(".slt_coverInner").text(
+						'');
+			}
+		}
+		$(function() {
+			$(".tf_cal").datepicker();
+		});
+	</script>
+<div aria-describedby="ui-id-1" aria-labelledby="ui-id-2" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-draggable ui-resizable" role="dialog" style="position: fixed; height: auto; width: 810px; top: 15px; left: 368px; display: block;" tabindex="-1"><div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle"><!--[if IE]>
+
+<![endif]-->
+<!-- 기본 css -->
+<link href="/kobis/web/comm/commcss/default.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/jquery-ui-1.12.1.min.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/common.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/cont.css" rel="stylesheet" type="text/css"/>
+<link href="/kobis/web/comm/commcss/kobis.css" rel="stylesheet" type="text/css"/>
+<div class="hd_layer">
+<div style="width: 680px;display: inline-block;">
+<strong class="tit">다크 스펠</strong>
+	  		(Dark Spell)
+  		</div>
+<a class="close back" href="javascript:;" onclick="dtlPrev();return false;"><span class="ico_comm">뒤로</span></a>
+<a class="close" href="javascript:;" onclick="dtlRmAll();return false;"><span class="ico_comm">닫기</span></a>
+</div>
+<div class="wrap_tab tab2">
+<ul class="list_tab">
+<li class="active"><a class="tab" href="javascript:;">기본정보</a></li>
+<li><a class="tab" href="javascript:;">통계정보</a></li>
+<li><a class="tab" href="javascript:;">상영현황정보</a></li>
+</ul>
+</div></div><div class="layer ui-dialog-content ui-widget-content" id="ui-id-1" style="width: auto; min-height: 401px; max-height: 401px; height: auto;"><div class="cont_tab">
+<!-- 기본정보 -->
+<div class="item_tab basic" style="display: block;">
+<div class="bar_top">
+<div class="modify">
+                	
+                		
+                		
+                		* 최종수정: 2021-06-30 14:46:39
+                		
+                	                	 
+                	
+	                	
+	                	
+	                		
+			                	<a class="btn_small" href="/kobis/business/comm/bord/insertTip.do?dtTp=movie&amp;dtCd=20218783">수정요청</a>
+</div>
+<ul class="list_sns">
+<li><a class="sns_facebook" href="javascript:;" onclick="sendFaceBook('영화 \'다크 스펠\'의 상세정보 보러가기','http://kobis.or.kr:443/kobis/business/mast/mvie/searchMovieList.do?dtTp=movie&amp;dtCd=20218783');return false;"><span class="ico_comm">페이스북</span></a></li>
+<li><a class="sns_twitter" href="javascript:;" onclick="sendTwitter('영화 \'다크 스펠\'의 상세정보','http://kobis.or.kr:443/kobis/business/mast/mvie/searchMovieList.do?dtTp=movie&amp;dtCd=20218783');return false;"><span class="ico_comm">트위터</span></a></li>
+</ul>
+</div>
+<div class="ovf info info1">
+<a class="fl thumb" href="/common/mast/movie/2021/06/7cdf9d3c40b8495aad01b979e84389a8.jpg" onclick="open('/kobis/business/mast/mvie/popupImg.do?imgURL=/common/mast/movie/2021/06/7cdf9d3c40b8495aad01b979e84389a8.jpg','','');return false;" target="_blank"><img alt="teaser_poster.jpg" onerror="this.src='/kobis/web/comm/images/noimage289.jpg';" src="/common/mast/movie/2021/06/thumb_x192/thn_7cdf9d3c40b8495aad01b979e84389a8.jpg"/></a>
+<dl class="ovf cont">
+<dt>코드</dt>
+<dd>20218783</dd>
+<dt>ISAN</dt>
+<dd>
+                    	
+                       		해당정보 없음
+                       	
+                       	
+                    </dd>
+<dt>A.K.A.</dt>
+<dd>
+                    	
+                        
+                        	
+                        	
+                        		(Love Spell. The Black Wedding, Privorot. Chernoe venchanie)
+                        	
+                       	
+                    </dd>
+<dt>요약정보</dt>
+<dd>                    	
+                    	장편 | 
+                    						
+						
+							
+							
+							
+							
+							
+							
+							
+							일반영화
+						
+						
+						
+							| 
+	                       	
+	                       			멜로/로맨스,
+	                       	
+	                       			공포(호러)
+	                       		                       	
+                       	
+                          	
+						
+							| 
+							92분 0초
+						
+						
+						
+						
+						
+							| 
+							
+	                        	러시아
+	                        
+						
+                    </dd>
+<dt>개봉(예정)일</dt>
+<dd>
+                    	
+						2021-07
+                    </dd>
+<dt>제작연도</dt>
+<dd>
+                    	
+						
+							2021년
+						
+                    </dd>
+<dt>제작상태</dt>
+<dd>
+						
+						
+							개봉예정
+						
+                    </dd>
+<dt>크랭크인/업</dt>
+<dd>
+						
+							해당정보없음
+						
+						
+                    </dd>
+<dt>촬영회차</dt>
+<dd>
+                    	
+							해당정보없음
+						
+						
+                    </dd>
+<dt>상영타입</dt>
+<dd>
+						
+							해당정보없음
+						
+						                    	
+                    </dd>
+</dl>
+</div>
+<!-- 옴니버스 시작 -->
+<!-- 옴니버스 끝 -->
+<div class="info info2">
+<strong class="tit_type1">시놉시스</strong>
+<p class="desc_info">
+                    “우리를 두 양초처럼 얽히게 해 주세요<br/>첫 번째 초는 당신 것, 두 번째 초는 내 것<br/>당신은 내 것, 나는 당신의 것”<br/><br/>사랑하는 남자에게 버림받은 제냐.<br/>그의 마음을 되돌리기 위해 ‘검은 결혼식’이라는 주문을 걸고 사랑을 되찾는다.<br/>하지만 그녀를 향한 그의 사랑은 점점 광적인 집착을 보이는데…
+              	</p>
+</div>
+<div class="info info2">
+<div class="staffMore" id="20218783_staff" name="20218783_staff"><strong class="tit_type1">만든사람들</strong><dl class="desc_info"><div id="20218783_director" name="20218783_director"><dt style="color:#5076db;">감독</dt><dd style="margin-left:90px;"><a href="#none" onclick="mstView('people','10059096');return false;" style="text-decoration: underline;">스브야토슬라브 포드가에브스키</a></dd></div><div style="padding-top:15px;margin-top:15px;border-top:1px solid #efefef;"><dt style="color:#5076db;">배우</dt><dd style="margin-left:90px;"><table><tbody><tr><td><strong style="margin-right:10px;">[주연]</strong> <a href="#none" onclick="mstView('people','20376466');return false;">야나 엔자에바</a> | <a href="#none" onclick="mstView('people','20376459');return false;">일리야 에르몰로프</a> | <a href="#none" onclick="mstView('people','20376458');return false;">콘스탄틴 벨로샤프카</a> | <a href="#none" onclick="mstView('people','20376460');return false;">바바라 보로디나</a></td></tr></tbody></table><div style="height:4px;"></div></dd></div></dl></div>
+</div>
+</div>
+<!-- 통계정보 -->
+<div class="item_tab statistics" style="display: none;"><!-- 공식통계 -->
+<!-- kobis(발권)통계 -->
+<!-- 박스오피스 -->
+<div class="info info2">
+<strong class="tit_type1">박스오피스</strong>
+<p class="desc_info">일자별 스크린수, 상영횟수, 관객수, 매출액 등의 통계정보입니다. 엑셀을 통해서 세부적인 통계를 확인할 수 있습니다.</p>
+<div class="info_tbl">
+<ul class="fl">
+<li><a class="btn_blue" href="javascript:;" onclick="dtlShowMyLayer(this,'.info','.tbl_comm','.tbl_comm:eq(0)','.info_tbl ul li a','btn_blue','btn_gray');return false;">개봉 10일</a></li>
+<li><a class="btn_gray" href="javascript:;" onclick="dtlShowMyLayer(this,'.info','.tbl_comm','.tbl_comm:eq(1)','.info_tbl ul li a','btn_blue','btn_gray');return false;">최신 10일</a></li>
+</ul>
+<div class="ovf tar">
+<div class="bar_top" style="margin-bottom: 0;">
+<div class="modify">
+						*출처 : KOBIS(발권)통계    *통계기준일 : 2021.06.29
+						<a class="btn_small" href="javascript:;" onclick="dtlExcelDn('movie','box','20218783');return false;">엑셀</a>
+</div>
+</div>
+</div>
+</div>
+<table class="tbl_comm topico">
+<caption class="blind">박스오피스</caption>
+<colgroup>
+<col style="width:15%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:14%;"/>
+<col style="width:14%;"/><col style="width:14%;"/><col style="width:11%;"/><col style="width:6%;"/>
+</colgroup>
+<thead>
+<tr class="bt2">
+<th scope="col">날짜</th>
+<th scope="col">스크린수</th>
+<th scope="col">상영횟수</th>
+<th scope="col">매출액</th>
+<th scope="col">관객수</th>
+<th scope="col">누적매출액</th>
+<th scope="col">누적관객수</th>
+<th scope="col">순위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>개봉이전</td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar">N/A</td>
+</tr>
+</tbody>
+</table>
+<table class="tbl_comm topico" style="display:none;">
+<caption>박스오피스</caption>
+<colgroup>
+<col style="width:15%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:14%;"/>
+<col style="width:14%;"/><col style="width:14%;"/><col style="width:11%;"/><col style="width:6%;"/>
+</colgroup>
+<thead>
+<tr class="bt2">
+<th scope="col">날짜</th>
+<th scope="col">스크린수</th>
+<th scope="col">상영횟수</th>
+<th scope="col">매출액</th>
+<th scope="col">관객수</th>
+<th scope="col">누적매출액</th>
+<th scope="col">누적관객수</th>
+<th scope="col">순위</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최근10일이전</td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar"></td>
+<td class="tar">N/A</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- 점유율 통계 -->
+<div class="info info2">
+<strong class="tit_type1">점유율 통계</strong>
+<p class="desc_info">일자별 스크린수, 상영횟수, 좌석수 등에 대한 점유율 통계정보입니다. 엑셀을 통해서 세부적인 통계를 확인할 수 있습니다.</p>
+<div class="info_tbl">
+<ul class="fl">
+<li><a class="btn_blue" href="javascript:;" onclick="dtlShowMyLayer(this,'.info','.tbl_comm','.tbl_comm:eq(0)','.info_tbl ul li a','btn_blue','btn_gray');return false;">개봉 10일</a></li>
+<li><a class="btn_gray" href="javascript:;" onclick="dtlShowMyLayer(this,'.info','.tbl_comm','.tbl_comm:eq(1)','.info_tbl ul li a','btn_blue','btn_gray');return false;">최신 10일</a></li>
+</ul>
+<div class="ovf tar">
+<div class="bar_top" style="margin-bottom: 0;">
+<div class="modify">
+						*출처 : KOBIS(발권)통계    *통계기준일 : 2021.06.29
+						<a class="btn_small" href="javascript:;" onclick="dtlExcelDn('movie','box','20218783');return false;">엑셀</a>
+</div>
+</div>
+</div>
+</div>
+<table class="tbl_comm topico">
+<caption class="blind">점유율통계</caption>
+<colgroup>
+<col style="width:14%;"/>
+<col style="width:8%;"/>
+<col style="width:8%;"/>
+<col style="width:8%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+</colgroup>
+<thead>
+<tr class="bt2">
+<th scope="col">날짜</th>
+<th scope="col">스크린수</th>
+<th scope="col">
+					스크린<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">기간에 상영된 특정영화의 스크린 수 / 기간에 상영된 영화의 전체 스크린 수 * 100</span>
+</a>
+</th>
+<th scope="col">상영횟수</th>
+<th scope="col">
+					상영<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">상영횟수 / 조회기간에 상영된 영화의 전체 상영 횟수 * 100</span>
+</a>
+</th>
+<th scope="col">좌석수</th>
+<th scope="col">좌석<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">배정된 좌석수 / 일일 총 좌석수 * 100</span>
+</a>
+</th>
+<th scope="col">관객수</th>
+<th scope="col">좌석<br/>판매율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">관객수 / 배정된 좌석수 * 100</span>
+</a>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>개봉이전</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+</tr>
+</tbody>
+</table>
+<table class="tbl_comm topico" style="display:none;">
+<caption class="blind">점유율통계</caption>
+<colgroup>
+<col style="width:14%;"/>
+<col style="width:8%;"/>
+<col style="width:8%;"/>
+<col style="width:8%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+<col style="width:10%;"/>
+</colgroup>
+<thead>
+<tr class="bt2">
+<th scope="col">날짜</th>
+<th scope="col">스크린수</th>
+<th scope="col">
+					스크린<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">기간에 상영된 특정영화의 스크린 수 / 기간에 상영된 영화의 전체 스크린 수 * 100</span>
+</a>
+</th>
+<th scope="col">상영횟수</th>
+<th scope="col">
+					상영<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">상영횟수 / 조회기간에 상영된 영화의 전체 상영 횟수 * 100</span>
+</a>
+</th>
+<th scope="col">좌석수</th>
+<th scope="col">좌석<br/>점유율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">배정된 좌석수 / 일일 총 좌석수 * 100</span>
+</a>
+</th>
+<th scope="col">관객수</th>
+<th scope="col">좌석<br/>판매율<br/>
+<a class="tooltip" href="javascript:;">
+<span class="ico_comm">설명 보기</span>
+<span class="layer_desc">관객수 / 배정된 좌석수 * 100</span>
+</a>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>최근10일이전</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+<td class="tar"></td>
+<td class="tar">
+								N/A</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- 지역별 누적통계 -->
+<!-- 상영타입별 누적통계 -->
+<!-- 부가시장 상영통계 --></div>
+<!-- 상영현황정보 -->
+<div class="item_tab status" style="display: none;"></div>
+</div>
+<!-- // 영화 상세 layer --></div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div><div class="ui-widget-overlay ui-front" style="z-index: 998;"></div><div class="ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" id="ui-datepicker-div"></div></body></html>

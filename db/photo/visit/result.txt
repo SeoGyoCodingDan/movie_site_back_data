@@ -1,0 +1,5 @@
+len(entire_files), len(poster_files) : 82557, 82556
+len(entire_files-poster_files) : 1
+sub : {'20001337'}
+len(ori_visit) : 82557
+not yet : defaultdict(<class 'int'>, {'visit_8.pickle': 4, 'visit_0.pickle': 2, 'visit_9.pickle': 6, 'visit_1.pickle': 7})
